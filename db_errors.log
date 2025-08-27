@@ -1,0 +1,870 @@
+2025-08-20 18:06:56 - ERROR - 更新错误 [SQL: 
+    CREATE TABLE IF NOT EXISTS pc_template_resources (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT ' 主键 ID',
+    template_id BIGINT NOT NULL COMMENT ' 工序模板 ID',
+    resource_code VARCHAR (50) NOT NULL COMMENT ' 资源编码 ',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT ' 创建时间 ',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_template_resource (template_id, resource_code) COMMENT ' 模板与资源关联唯一约束 ',
+    KEY fk_template_id (template_id) COMMENT ' 模板 ID 外键索引 ',
+    KEY fk_resource_code (resource_code) COMMENT ' 资源编码外键索引 ',
+    CONSTRAINT fk_ptr_template_id FOREIGN KEY (template_id) REFERENCES pc_process_template (id) ON DELETE CASCADE,
+    CONSTRAINT fk_ptr_resource_code FOREIGN KEY (resource_code) REFERENCES pc_resource (code) ON DELETE RESTRICT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT=' 工序模板与资源关联表 '
+    ] [参数: None]: (3780, "Referencing column 'resource_code' and referenced column 'code' in foreign key constraint 'fk_ptr_resource_code' are incompatible.")
+2025-08-20 18:06:56 - ERROR - 更新错误 [SQL: 
+    CREATE TABLE IF NOT EXISTS pc_template_materials (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT ' 主键 ID',
+    template_id BIGINT NOT NULL COMMENT ' 工序模板 ID',
+    material_code VARCHAR (50) NOT NULL COMMENT ' 物料编码 ',
+    quantity DECIMAL (15,2) NOT NULL DEFAULT 1 COMMENT ' 物料数量 ',
+    is_used TINYINT (1) DEFAULT 1 COMMENT ' 是否使用（0 - 否 1 - 是）',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT ' 创建时间 ',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT ' 更新时间 ',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_template_material (template_id, material_code) COMMENT ' 模板与物料关联唯一约束 ',
+    KEY fk_ptm_template_id (template_id) COMMENT ' 模板 ID 外键索引 ',
+    KEY fk_ptm_material_code (material_code) COMMENT ' 物料编码外键索引 ',
+    CONSTRAINT fk_ptm_template_id FOREIGN KEY (template_id) REFERENCES pc_process_template (id) ON DELETE CASCADE,
+    CONSTRAINT fk_ptm_material_code FOREIGN KEY (material_code) REFERENCES pc_material (code) ON DELETE RESTRICT
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT=' 工序模板与物料关联表 '
+    ] [参数: None]: (3780, "Referencing column 'material_code' and referenced column 'code' in foreign key constraint 'fk_ptm_material_code' are incompatible.")
+2025-08-20 18:06:57 - ERROR - 查询错误 [SQL: 
+        SELECT t.*, 
+               (SELECT COUNT(*) FROM pc_template_resources tr WHERE tr.template_id = t.id) as resource_count,
+               (SELECT COUNT(*) FROM pc_template_materials tm WHERE tm.template_id = t.id) as material_count
+        FROM pc_process_template t
+         ORDER BY created_at DESC] [参数: []]: (1146, "Table 'xwerp-jianguo.pc_template_resources' doesn't exist")
+2025-08-21 11:10:27 - ERROR - 查询错误 [SQL: SELECT r.* FROM pc_template_resources tr JOIN pc_resource r ON tr.resource_code = r.code WHERE tr.template_id = %s] [参数: (1,)]: (1267, "Illegal mix of collations (utf8mb4_0900_ai_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '='")
+2025-08-21 11:47:36 - ERROR - 查询错误 [SQL: SELECT m.*, tm.quantity, tm.is_used FROM pc_template_materials tm JOIN pc_material m ON tm.material_code = m.code WHERE tm.template_id = %s] [参数: (1,)]: (1267, "Illegal mix of collations (utf8mb4_0900_ai_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '='")
+2025-08-21 11:49:07 - ERROR - 查询错误 [SQL: SELECT m.*, tm.quantity, tm.is_used FROM pc_template_materials tm JOIN pc_material m ON tm.material_code = m.code WHERE tm.template_id = %s] [参数: (1,)]: (1267, "Illegal mix of collations (utf8mb4_0900_ai_ci,IMPLICIT) and (utf8mb4_unicode_ci,IMPLICIT) for operation '='")
+2025-08-21 18:27:24 - ERROR - 查询错误 [SQL: 
+        SELECT id, resource_code, resource_name, resource_group, capacity 
+        FROM pc_process_template_resource 
+        WHERE template_id = %s
+        ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_process_template_resource' doesn't exist")
+2025-08-21 18:27:24 - ERROR - 查询错误 [SQL: 
+        SELECT id, material_code, material_name, quantity, is_used 
+        FROM pc_process_template_material 
+        WHERE template_id = %s
+        ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_process_template_material' doesn't exist")
+2025-08-22 09:05:51 - ERROR - 查询错误 [SQL: 
+        SELECT id, resource_code, resource_name, resource_group, capacity 
+        FROM pc_process_template_resource 
+        WHERE template_id = %s
+        ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_process_template_resource' doesn't exist")
+2025-08-22 09:05:51 - ERROR - 查询错误 [SQL: 
+        SELECT id, material_code, material_name, quantity, is_used 
+        FROM pc_process_template_material 
+        WHERE template_id = %s
+        ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_process_template_material' doesn't exist")
+2025-08-22 09:42:34 - ERROR - 插入错误 [SQL: 
+                INSERT INTO pc_process_route_node 
+                (route_id, template_id, x_pos, y_pos, sort_order,
+                 process_code, process_name, pre_interval_value, pre_interval_unit,
+                 post_interval_value, post_interval_unit, relation)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ] [参数: ([], 1, -500.0, -190.0, 0, 'GX001', '全套生产', 0.0, '分', 0.0, '分', 'ES')]: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '), 1, -500.0e0, -190.0e0, 0, 'GX001', '全套生产', 0.0e0, '分', 0.0e0, '分'' at line 5")
+2025-08-22 09:48:35 - ERROR - 插入错误 [SQL: 
+                INSERT INTO pc_process_route_node 
+                (route_id, template_id, x_pos, y_pos, sort_order,
+                 process_code, process_name, pre_interval_value, pre_interval_unit,
+                 post_interval_value, post_interval_unit, relation)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ] [参数: ([], 1, -528.0, -187.0, 0, 'GX001', '全套生产', 0.0, '分', 0.0, '分', 'ES')]: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '), 1, -528.0e0, -187.0e0, 0, 'GX001', '全套生产', 0.0e0, '分', 0.0e0, '分'' at line 5")
+2025-08-22 09:50:31 - ERROR - 插入错误 [SQL: 
+                INSERT INTO pc_process_route_node 
+                (route_id, template_id, x_pos, y_pos, sort_order,
+                 process_code, process_name, pre_interval_value, pre_interval_unit,
+                 post_interval_value, post_interval_unit, relation)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ] [参数: ([], 1, -395.0, -194.0, 0, 'GX001', '全套生产', 0.0, '分', 0.0, '分', 'ES')]: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '), 1, -395.0e0, -194.0e0, 0, 'GX001', '全套生产', 0.0e0, '分', 0.0e0, '分'' at line 5")
+2025-08-22 09:54:15 - ERROR - 插入错误 [SQL: 
+                INSERT INTO pc_process_route_node 
+                (route_id, template_id, x_pos, y_pos, sort_order,
+                 process_code, process_name, pre_interval_value, pre_interval_unit,
+                 post_interval_value, post_interval_unit, relation)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ] [参数: (5, 1, -470.0, -188.0, 0, 'GX001', '全套生产', 0.0, '分', 0.0, '分', 'ES')]: (1054, "Unknown column 'pre_interval_value' in 'field list'")
+2025-08-22 12:10:31 - ERROR - 更新错误 [SQL: 
+    CREATE TABLE IF NOT EXISTS pc_process_route (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    material_code VARCHAR(50) NOT NULL COMMENT '物料编码（关联pc_material）',
+    route_name VARCHAR(100) NOT NULL COMMENT '工艺路线名称',
+    route_desc TEXT COMMENT '工艺路线描述',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_material (material_code) COMMENT '物料唯一对应一条工艺路线',
+    FOREIGN KEY (material_code) REFERENCES pc_material(code)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线主表';
+    ] [参数: None]: (3780, "Referencing column 'material_code' and referenced column 'code' in foreign key constraint 'pc_process_route_ibfk_1' are incompatible.")
+2025-08-22 12:10:31 - ERROR - 更新错误 [SQL: 
+    CREATE TABLE IF NOT EXISTS pc_route_node_resources (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    node_id BIGINT NOT NULL COMMENT '工艺路线节点ID',
+    resource_code VARCHAR(50) NOT NULL COMMENT '资源编码（关联pc_resource）',
+    capacity DECIMAL(10,2) DEFAULT 0 COMMENT '容量（节点配置）',
+    productivity_value DECIMAL(10,2) COMMENT '产能值（节点配置）',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_node_resource (node_id, resource_code) COMMENT '节点资源唯一',
+    FOREIGN KEY (resource_code) REFERENCES pc_resource(code)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点主资源表';
+    ] [参数: None]: (3780, "Referencing column 'resource_code' and referenced column 'code' in foreign key constraint 'pc_route_node_resources_ibfk_1' are incompatible.")
+2025-08-22 12:10:32 - ERROR - 更新错误 [SQL: 
+    CREATE TABLE IF NOT EXISTS pc_route_node_materials (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    node_id BIGINT NOT NULL COMMENT '工艺路线节点ID',
+    material_code VARCHAR(50) NOT NULL COMMENT '物料编码（关联pc_material）',
+    quantity DECIMAL(15,2) NOT NULL DEFAULT 1 COMMENT '数量（节点配置）',
+    is_used TINYINT(1) DEFAULT 1 COMMENT '是否使用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_node_material (node_id, material_code) COMMENT '节点物料唯一',
+    FOREIGN KEY (material_code) REFERENCES pc_material(code)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点使用物料表';
+    ] [参数: None]: (3780, "Referencing column 'material_code' and referenced column 'code' in foreign key constraint 'pc_route_node_materials_ibfk_1' are incompatible.")
+2025-08-22 12:10:34 - ERROR - 查询错误 [SQL: SELECT id, route_name FROM pc_process_route WHERE material_code = %s] [参数: ('cp-001',)]: (1146, "Table 'xwerp-jianguo.pc_process_route' doesn't exist")
+2025-08-22 12:16:15 - ERROR - 更新错误 [SQL: 
+    CREATE TABLE IF NOT EXISTS pc_process_route (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    material_code VARCHAR(50) NOT NULL COMMENT '物料编码（关联pc_material）',
+    route_name VARCHAR(100) NOT NULL COMMENT '工艺路线名称',
+    route_desc TEXT COMMENT '工艺路线描述',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_material (material_code) COMMENT '物料唯一对应一条工艺路线',
+    FOREIGN KEY (material_code) REFERENCES pc_material(code)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线主表';
+    ] [参数: None]: (3780, "Referencing column 'material_code' and referenced column 'code' in foreign key constraint 'pc_process_route_ibfk_1' are incompatible.")
+2025-08-22 12:16:15 - ERROR - 更新错误 [SQL: 
+    CREATE TABLE IF NOT EXISTS pc_route_node_resources (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    node_id BIGINT NOT NULL COMMENT '工艺路线节点ID',
+    resource_code VARCHAR(50) NOT NULL COMMENT '资源编码（关联pc_resource）',
+    capacity DECIMAL(10,2) DEFAULT 0 COMMENT '容量（节点配置）',
+    productivity_value DECIMAL(10,2) COMMENT '产能值（节点配置）',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_node_resource (node_id, resource_code) COMMENT '节点资源唯一',
+    KEY fk_node_id (node_id) COMMENT '节点ID外键索引',
+    KEY fk_resource_code (resource_code) COMMENT '资源编码外键索引',
+    -- 外键约束：确保与pc_resource.code类型完全一致
+    CONSTRAINT fk_node_res_node FOREIGN KEY (node_id) REFERENCES pc_process_route_node(id) ON DELETE CASCADE,
+    CONSTRAINT fk_node_res_resource FOREIGN KEY (resource_code) REFERENCES pc_resource(code)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点主资源表';
+    ] [参数: None]: (3780, "Referencing column 'resource_code' and referenced column 'code' in foreign key constraint 'fk_node_res_resource' are incompatible.")
+2025-08-22 12:16:15 - ERROR - 更新错误 [SQL: 
+    CREATE TABLE IF NOT EXISTS pc_route_node_materials (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    node_id BIGINT NOT NULL COMMENT '工艺路线节点ID',
+    material_code VARCHAR(50) NOT NULL COMMENT '物料编码（关联pc_material）',
+    quantity DECIMAL(15,2) NOT NULL DEFAULT 1 COMMENT '数量（节点配置）',
+    is_used TINYINT(1) DEFAULT 1 COMMENT '是否使用',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_node_material (node_id, material_code) COMMENT '节点物料唯一',
+    FOREIGN KEY (material_code) REFERENCES pc_material(code)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点使用物料表';
+    ] [参数: None]: (3780, "Referencing column 'material_code' and referenced column 'code' in foreign key constraint 'pc_route_node_materials_ibfk_1' are incompatible.")
+2025-08-22 12:16:18 - ERROR - 查询错误 [SQL: SELECT id, route_name FROM pc_process_route WHERE material_code = %s] [参数: ('cp-001',)]: (1146, "Table 'xwerp-jianguo.pc_process_route' doesn't exist")
+2025-08-22 14:21:10 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 14:21:10 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 14:21:10 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 14:24:19 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 14:24:19 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 14:24:19 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 14:35:24 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 14:35:25 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 14:35:25 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 14:35:25 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 14:35:25 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 14:35:25 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:22:52 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:22:53 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:22:53 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:22:53 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:22:53 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:22:53 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:22:56 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:22:56 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:22:56 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:22:56 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:22:56 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:22:56 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:22:57 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:22:57 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:22:57 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:22:58 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:22:58 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:22:58 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:22:59 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:22:59 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:22:59 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:00 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:00 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:00 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:05 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:05 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:05 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:05 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:05 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:06 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:06 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:06 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:06 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:06 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:06 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:06 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:25 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:25 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:26 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:26 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:26 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:26 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:31 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:31 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:31 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:32 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:32 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:32 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:32 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:32 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:32 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:32 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:33 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:33 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:36 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:36 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:36 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:23:37 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:23:37 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:23:37 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:26:30 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:26:30 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:26:30 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:27:06 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:27:06 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:27:06 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:27:55 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:27:55 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:27:55 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:29:33 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:29:33 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:29:33 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:29:58 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:29:58 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:29:58 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 15:30:49 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:43:26 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 15:43:27 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 15:43:27 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 16:00:45 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 16:00:45 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 16:00:45 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 16:03:47 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 16:03:47 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 16:03:47 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 16:14:38 - ERROR - 查询错误 [SQL: 
+                SELECT tr.resource_code, r.name, r.resource_group, tr.capacity 
+                FROM pc_template_resources tr 
+                JOIN pc_resource r ON tr.resource_code = r.code 
+                WHERE tr.template_id = %s
+            ] [参数: (1,)]: (1054, "Unknown column 'tr.capacity' in 'field list'")
+2025-08-22 16:14:38 - ERROR - 查询错误 [SQL: 
+                SELECT allow_split, min_batch, max_batch, split_threshold, split_strategy 
+                FROM pc_template_split 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_split' doesn't exist")
+2025-08-22 16:14:38 - ERROR - 查询错误 [SQL: 
+                SELECT time_value, time_unit 
+                FROM pc_template_changeover 
+                WHERE template_id = %s
+            ] [参数: (1,)]: (1146, "Table 'xwerp-jianguo.pc_template_changeover' doesn't exist")
+2025-08-22 16:19:33 - ERROR - 更新错误 [SQL: DELETE FROM pc_route_node_resources WHERE route_id = %s] [参数: (1,)]: (1054, "Unknown column 'route_id' in 'where clause'")
+2025-08-22 16:19:33 - ERROR - 更新错误 [SQL: DELETE FROM pc_route_node_materials WHERE route_id = %s] [参数: (1,)]: (1054, "Unknown column 'route_id' in 'where clause'")
+2025-08-22 16:19:33 - ERROR - 更新错误 [SQL: DELETE FROM pc_route_node_split WHERE route_id = %s] [参数: (1,)]: (1054, "Unknown column 'route_id' in 'where clause'")
+2025-08-22 16:19:33 - ERROR - 更新错误 [SQL: DELETE FROM pc_route_node_changeover WHERE route_id = %s] [参数: (1,)]: (1054, "Unknown column 'route_id' in 'where clause'")
+2025-08-22 16:19:33 - ERROR - 插入错误 [SQL: 
+                    INSERT INTO pc_process_route_node (
+                        route_id, template_id, code, name, 
+                        pre_interval_value, pre_interval_unit,
+                        post_interval_value, post_interval_unit, 
+                        relation, x_pos, y_pos, sort_order
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ] [参数: (1, 1, 'GX001', '全套生产', Decimal('0.0'), '分', Decimal('0.0'), '分', 'ES', 737.0, 891.0, 0)]: (1054, "Unknown column 'code' in 'field list'")
+2025-08-22 16:19:33 - ERROR - 插入错误 [SQL: 
+                    INSERT INTO pc_route_node_split 
+                    (route_id, node_id, allow_split, min_batch, max_batch, split_threshold, split_strategy) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ] [参数: (1, None, False, 0, 0, 0, '')]: (1054, "Unknown column 'route_id' in 'field list'")
+2025-08-22 16:19:34 - ERROR - 插入错误 [SQL: 
+                    INSERT INTO pc_route_node_changeover 
+                    (route_id, node_id, time_value, time_unit) 
+                    VALUES (%s, %s, %s, %s)
+                ] [参数: (1, None, 0, '分')]: (1054, "Unknown column 'route_id' in 'field list'")
+2025-08-22 16:19:36 - ERROR - 查询错误 [SQL: 
+        SELECT id, name, x_pos, y_pos FROM pc_process_route_node 
+        WHERE route_id = %s ORDER BY sort_order
+        ] [参数: (1,)]: (1054, "Unknown column 'name' in 'field list'")
+2025-08-22 17:13:14 - ERROR - 查询错误 [SQL: 
+        SELECT id, name, x_pos, y_pos FROM pc_process_route_node 
+        WHERE route_id = %s ORDER BY sort_order
+        ] [参数: (1,)]: (1054, "Unknown column 'name' in 'field list'")
+2025-08-22 18:04:32 - ERROR - 查询错误 [SQL: 
+        SELECT n.id, n.name, n.x_pos, n.y_pos, n.template_id, 
+               n.pre_interval_value, n.pre_interval_unit,
+               n.post_interval_value, n.post_interval_unit,
+               n.relation
+        FROM pc_process_route_node n 
+        WHERE route_id = %s ORDER BY sort_order
+        ] [参数: (1,)]: (1054, "Unknown column 'n.name' in 'field list'")
+2025-08-26 18:19:44 - ERROR - 更新错误 [SQL: CREATE TABLE pc_process_route (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (material_code) REFERENCES pc_material(code)
+    )] [参数: None]: (1050, "Table 'pc_process_route' already exists")
+2025-08-26 18:19:44 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_node (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    template_id INT,
+    name VARCHAR(100) NOT NULL,
+    x_pos INT DEFAULT 0,
+    y_pos INT DEFAULT 0,
+    sort_order INT,
+    pre_interval DECIMAL(10,1),
+    pre_interval_unit VARCHAR(10),
+    post_interval DECIMAL(10,1),
+    post_interval_unit VARCHAR(10),
+    relation VARCHAR(2),
+    buffer_time DECIMAL(10,1),
+    buffer_time_unit VARCHAR(10),
+    FOREIGN KEY (material_code) REFERENCES pc_material(code),
+    FOREIGN KEY (template_id) REFERENCES pc_process_template(id)
+    )] [参数: None]: (3780, "Referencing column 'template_id' and referenced column 'id' in foreign key constraint 'pc_route_node_ibfk_2' are incompatible.")
+2025-08-26 18:19:44 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_link (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    from_node_id INT NOT NULL,
+    to_node_id INT NOT NULL,
+    FOREIGN KEY (material_code) REFERENCES pc_material(code),
+    FOREIGN KEY (from_node_id) REFERENCES pc_route_node(id),
+    FOREIGN KEY (to_node_id) REFERENCES pc_route_node(id)
+    )] [参数: None]: (1824, "Failed to open the referenced table 'pc_route_node'")
+2025-08-26 18:22:48 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_node (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    template_id INT,
+    name VARCHAR(100) NOT NULL,
+    x_pos INT DEFAULT 0,
+    y_pos INT DEFAULT 0,
+    sort_order INT,
+    pre_interval DECIMAL(10,1),
+    pre_interval_unit VARCHAR(10),
+    post_interval DECIMAL(10,1),
+    post_interval_unit VARCHAR(10),
+    relation VARCHAR(2),
+    buffer_time DECIMAL(10,1),
+    buffer_time_unit VARCHAR(10),
+    FOREIGN KEY (material_code) REFERENCES pc_material(code),
+    FOREIGN KEY (template_id) REFERENCES pc_process_template(id)
+    )] [参数: None]: (3780, "Referencing column 'template_id' and referenced column 'id' in foreign key constraint 'pc_route_node_ibfk_2' are incompatible.")
+2025-08-26 18:22:48 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_link (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    from_node_id INT NOT NULL,
+    to_node_id INT NOT NULL,
+    FOREIGN KEY (material_code) REFERENCES pc_material(code),
+    FOREIGN KEY (from_node_id) REFERENCES pc_route_node(id),
+    FOREIGN KEY (to_node_id) REFERENCES pc_route_node(id)
+    )] [参数: None]: (1824, "Failed to open the referenced table 'pc_route_node'")
+2025-08-26 18:26:01 - ERROR - 更新错误 [SQL: CREATE TABLE pc_process_route (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (material_code) REFERENCES pc_material(code)
+    )] [参数: None]: (1050, "Table 'pc_process_route' already exists")
+2025-08-26 18:26:01 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_node (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    template_id INT,
+    name VARCHAR(100) NOT NULL,
+    x_pos INT DEFAULT 0,
+    y_pos INT DEFAULT 0,
+    sort_order INT,
+    pre_interval DECIMAL(10,1),
+    pre_interval_unit VARCHAR(10),
+    post_interval DECIMAL(10,1),
+    post_interval_unit VARCHAR(10),
+    relation VARCHAR(2),
+    buffer_time DECIMAL(10,1),
+    buffer_time_unit VARCHAR(10),
+    FOREIGN KEY (material_code) REFERENCES pc_material(code),
+    FOREIGN KEY (template_id) REFERENCES pc_process_template(id)
+    )] [参数: None]: (3780, "Referencing column 'template_id' and referenced column 'id' in foreign key constraint 'pc_route_node_ibfk_2' are incompatible.")
+2025-08-26 18:26:01 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_link (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    from_node_id INT NOT NULL,
+    to_node_id INT NOT NULL,
+    FOREIGN KEY (material_code) REFERENCES pc_material(code),
+    FOREIGN KEY (from_node_id) REFERENCES pc_route_node(id),
+    FOREIGN KEY (to_node_id) REFERENCES pc_route_node(id)
+    )] [参数: None]: (1824, "Failed to open the referenced table 'pc_route_node'")
+2025-08-26 18:28:52 - ERROR - 更新错误 [SQL: CREATE TABLE IF NOT EXISTS pc_route_node (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    template_id INT,
+    name VARCHAR(100) NOT NULL,
+    x_pos INT DEFAULT 0,
+    y_pos INT DEFAULT 0,
+    sort_order INT,
+    pre_interval DECIMAL(10,1),
+    pre_interval_unit VARCHAR(10),
+    post_interval DECIMAL(10,1),
+    post_interval_unit VARCHAR(10),
+    relation VARCHAR(2),
+    buffer_time DECIMAL(10,1),
+    buffer_time_unit VARCHAR(10),
+    FOREIGN KEY (material_code) REFERENCES pc_material(code),
+    FOREIGN KEY (template_id) REFERENCES pc_process_template(id)
+    )] [参数: None]: (3780, "Referencing column 'template_id' and referenced column 'id' in foreign key constraint 'pc_route_node_ibfk_2' are incompatible.")
+2025-08-26 18:28:52 - ERROR - 更新错误 [SQL: CREATE TABLE IF NOT EXISTS pc_route_link (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    material_code VARCHAR(50) NOT NULL,
+    from_node_id INT NOT NULL,
+    to_node_id INT NOT NULL,
+    FOREIGN KEY (material_code) REFERENCES pc_material(code),
+    FOREIGN KEY (from_node_id) REFERENCES pc_route_node(id),
+    FOREIGN KEY (to_node_id) REFERENCES pc_route_node(id)
+    )] [参数: None]: (1824, "Failed to open the referenced table 'pc_route_node'")
