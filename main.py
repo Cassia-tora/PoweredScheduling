@@ -22,7 +22,7 @@ def init_database():
         extra_fields TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    )
+    ) 
     """
     
     # 创建客户表
