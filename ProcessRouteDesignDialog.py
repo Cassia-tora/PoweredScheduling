@@ -217,9 +217,11 @@ class ProcessRouteDesignDialog(QDialog):
         
         # 节点详情区域
         detail_splitter = QSplitter(Qt.Vertical)
-        detail_splitter.setSizes([300, 200])
+        detail_splitter.setSizes([200, 400])  # 画布区域200，详情区域400
         
-        # 节点详情
+        # 节点详情 - 包裹在滚动区域中
+        self.node_detail_scroll = QScrollArea()
+        self.node_detail_scroll.setWidgetResizable(True)  # 自动调整大小
         self.node_detail_widget = QWidget()
         self.node_detail_layout = QHBoxLayout(self.node_detail_widget)
         
@@ -242,13 +244,15 @@ class ProcessRouteDesignDialog(QDialog):
         
         self.node_detail_layout.addWidget(self.basic_info_group)
         self.node_detail_layout.addWidget(self.tab_widget)
+        # 将详情部件放入滚动区域
+        self.node_detail_scroll.setWidget(self.node_detail_widget)
+        detail_splitter.addWidget(self.node_detail_scroll)  # 使用滚动区域替代原部件
         
-        detail_splitter.addWidget(self.node_detail_widget)
         right_layout.addWidget(detail_splitter)
         
         mid_splitter.addWidget(right_widget)
         main_layout.addWidget(mid_splitter, 1)
-
+        
         # 底部按钮
         btn_layout = QHBoxLayout()
         self.save_btn = QPushButton("保存")
