@@ -78,7 +78,7 @@ class MainFrame(QMainWindow):
         self.material_item = QTreeWidgetItem(["物料管理"])
         self.resource_item = QTreeWidgetItem(["资源管理"])  # 新增资源管理菜单
         self.process_template_item = QTreeWidgetItem(["工序模板"])
-        self.ProcessRoute_item = QTreeWidgetItem(["工序路线"])        
+        self.ProcessRoute_item = QTreeWidgetItem(["工艺路线"])        
         self.customer_item = QTreeWidgetItem(["客户管理"])
         self.supplier_item = QTreeWidgetItem(["供应商管理"])
         base_data.addChild(self.material_item)

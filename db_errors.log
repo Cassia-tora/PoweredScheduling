@@ -868,3 +868,14 @@
     FOREIGN KEY (from_node_id) REFERENCES pc_route_node(id),
     FOREIGN KEY (to_node_id) REFERENCES pc_route_node(id)
     )] [参数: None]: (1824, "Failed to open the referenced table 'pc_route_node'")
+2025-08-28 15:21:06 - ERROR - 查询错误 [SQL: 
+        SELECT n.id, n.template_id, n.name, n.x_pos, n.y_pos, t.code,
+               n.pre_interval, n.pre_interval_unit, n.post_interval, n.post_interval_unit,
+               n.relation, n.buffer_time, n.buffer_time_unit,
+               n.allow_split, n.min_batch, n.max_batch, n.split_threshold,
+               n.split_strategy, n.base_number,
+               n.changeover_time_value, n.changeover_time_unit
+        FROM pc_route_node n
+        LEFT JOIN pc_process_template t ON n.template_id = t.id
+        WHERE n.material_code = %s
+        ] [参数: ('cp-001',)]: (1054, "Unknown column 'n.allow_split' in 'field list'")

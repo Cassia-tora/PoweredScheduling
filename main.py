@@ -259,6 +259,15 @@ def init_database():
     relation VARCHAR(2),
     buffer_time DECIMAL(10,1),
     buffer_time_unit VARCHAR(10),
+    allow_split TINYINT (1) DEFAULT 0 COMMENT ' 是否允许自动拆分（0 - 否 1 - 是）',
+    min_batch INT DEFAULT NULL COMMENT ' 最小拆分批量 ',
+    max_batch INT DEFAULT NULL COMMENT ' 最大拆分批量 ',
+    split_threshold INT DEFAULT NULL COMMENT ' 触发拆分数量阈值 ',
+    split_strategy VARCHAR (20) DEFAULT NULL COMMENT ' 拆分策略（平均拆分 / 基准数拆分 / 产能比例拆分）',
+    base_number INT DEFAULT NULL COMMENT ' 基准数（拆分策略为基准数拆分时使用）',
+    changeover_time_value DECIMAL (10,1) DEFAULT 0 COMMENT ' 切换产品时长值 ',
+    changeover_time_unit VARCHAR (10) DEFAULT ' 分 ' COMMENT ' 切换产品时长单位（分 / 时 / 天）',
+
     FOREIGN KEY (material_code) REFERENCES pc_material(code),
     FOREIGN KEY (template_id) REFERENCES pc_process_template(id)
     )"""

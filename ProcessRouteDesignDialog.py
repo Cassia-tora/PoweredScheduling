@@ -116,6 +116,14 @@ class CanvasView(QGraphicsView):
             
             event.acceptProposedAction()
 
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        selected_items = self.scene().selectedItems()
+        if selected_items:
+            node_item = selected_items[0]
+            if isinstance(node_item, NodeItem):
+                self.dialog.show_node_detail(node_item)
+
 class LinkItem(QGraphicsLineItem):
     """节点连接线图形项"""
     def __init__(self, from_node, to_node):
@@ -229,7 +237,50 @@ class ProcessRouteDesignDialog(QDialog):
         self.basic_info_group = QGroupBox("基本信息")
         self.basic_info_layout = QFormLayout()
         self.basic_info_group.setLayout(self.basic_info_layout)
+
+        # 基本信息控件
+        self.node_code_edit = QLineEdit()
+        self.node_name_edit = QLineEdit()
+        self.pre_interval_edit = QDoubleSpinBox()
+        self.pre_interval_unit_combo = QComboBox()
+        self.pre_interval_unit_combo.addItems(["分", "时", "天"])
+        self.post_interval_edit = QDoubleSpinBox()
+        self.post_interval_unit_combo = QComboBox()
+        self.post_interval_unit_combo.addItems(["分", "时", "天"])
+        self.relation_combo = QComboBox()
+        self.relation_combo.addItems(["ES", "EE"])
+
+        self.buffer_time_edit = QDoubleSpinBox()
+        self.buffer_time_unit_combo = QComboBox()
+        self.buffer_time_unit_combo.addItems(["分", "时", "天"])
+
+        self.allow_split_check = QCheckBox("允许自动拆分")
+        self.changeover_edit = QDoubleSpinBox()
+        self.changeover_unit_combo = QComboBox()
+        self.changeover_unit_combo.addItems(["分", "时", "天"])
+
+        # 前间隔时长和单位在同一行
+        pre_interval_row = QHBoxLayout()
+        pre_interval_row.addWidget(self.pre_interval_edit)
+        pre_interval_row.addWidget(self.pre_interval_unit_combo)
+
+        # 后间隔时长和单位在同一行
+        post_interval_row = QHBoxLayout()
+        post_interval_row.addWidget(self.post_interval_edit)
+        post_interval_row.addWidget(self.post_interval_unit_combo)
         
+        # 缓冲时长和单位在同一行
+        buffer_time_row = QHBoxLayout()
+        buffer_time_row.addWidget(self.buffer_time_edit)
+        buffer_time_row.addWidget(self.buffer_time_unit_combo)
+
+        self.basic_info_layout.addRow("工序编码", self.node_code_edit)
+        self.basic_info_layout.addRow("工序名称", self.node_name_edit)
+        self.basic_info_layout.addRow("前间隔时长", pre_interval_row)
+        self.basic_info_layout.addRow("后间隔时长", post_interval_row)
+        self.basic_info_layout.addRow("工序关系", self.relation_combo)
+        self.basic_info_layout.addRow("缓冲时长", buffer_time_row)
+
         # 右侧标签页
         self.tab_widget = QTabWidget()
         self.resource_tab = QWidget()
@@ -242,6 +293,38 @@ class ProcessRouteDesignDialog(QDialog):
         self.tab_widget.addTab(self.split_tab, "自动拆分")
         self.tab_widget.addTab(self.changeover_tab, "换型配置")
         
+        # 自动拆分标签页控件
+        split_layout = QFormLayout()
+        self.allow_split_check = QCheckBox("允许自动拆分")
+        self.min_split_qty_edit = QDoubleSpinBox()
+        self.min_split_qty_edit.setMinimum(0)
+        self.max_split_qty_edit = QDoubleSpinBox()
+        self.max_split_qty_edit.setMinimum(0)
+        self.split_trigger_qty_edit = QDoubleSpinBox()
+        self.split_trigger_qty_edit.setMinimum(0)
+        self.split_strategy_combo = QComboBox()
+        self.split_strategy_combo.addItems(["平均拆分", "优先大批量", "优先小批量"])
+        self.split_base_qty_edit = QDoubleSpinBox()
+        self.split_base_qty_edit.setMinimum(0)
+
+        split_layout.addRow(self.allow_split_check)
+        split_layout.addRow("最小拆分量", self.min_split_qty_edit)
+        split_layout.addRow("最大拆分量", self.max_split_qty_edit)
+        split_layout.addRow("触发拆分数量阀值", self.split_trigger_qty_edit)
+        split_layout.addRow("拆分策略", self.split_strategy_combo)
+        split_layout.addRow("基准数", self.split_base_qty_edit)
+        self.split_tab.setLayout(split_layout)
+
+        # 换型配置标签页控件
+        changeover_layout = QFormLayout()
+        self.changeover_time_edit = QDoubleSpinBox()
+        self.changeover_time_edit.setMinimum(0)
+        self.changeover_time_unit_combo = QComboBox()
+        self.changeover_time_unit_combo.addItems(["分", "时", "天"])
+        changeover_layout.addRow("切换产品时长", self.changeover_time_edit)
+        changeover_layout.addRow("时长单位", self.changeover_time_unit_combo)
+        self.changeover_tab.setLayout(changeover_layout)
+
         self.node_detail_layout.addWidget(self.basic_info_group)
         self.node_detail_layout.addWidget(self.tab_widget)
         # 将详情部件放入滚动区域
@@ -275,9 +358,7 @@ class ProcessRouteDesignDialog(QDialog):
 
         # 查询节点数据
         node_query = """
-        SELECT n.id, n.template_id, n.name, n.x_pos, n.y_pos, t.code,
-               n.pre_interval, n.pre_interval_unit, n.post_interval, n.post_interval_unit,
-               n.relation, n.buffer_time, n.buffer_time_unit
+        SELECT n.*, t.code,t.name               
         FROM pc_route_node n
         LEFT JOIN pc_process_template t ON n.template_id = t.id
         WHERE n.material_code = %s
@@ -301,6 +382,18 @@ class ProcessRouteDesignDialog(QDialog):
             )
             self.nodes[node['id']] = node_item
             self.scene.addItem(node_item)
+
+        # 读取并设置控件值
+            self.allow_split_check.setChecked(bool(node.get('allow_split')))
+            self.min_split_qty_edit.setValue(node.get('min_batch') or 0)
+            self.max_split_qty_edit.setValue(node.get('max_batch') or 0)
+            self.split_trigger_qty_edit.setValue(node.get('split_threshold') or 0)
+            self.split_strategy_combo.setCurrentText(node.get('split_strategy') or "平均拆分")
+            self.split_base_qty_edit.setValue(node.get('base_number') or 0)
+            self.changeover_time_edit.setValue(node.get('changeover_time_value') or 0)
+            unit = node.get('changeover_time_unit') or "分"
+            idx = self.changeover_time_unit_combo.findText(unit)
+            self.changeover_time_unit_combo.setCurrentIndex(idx if idx >= 0 else 0)            
 
         # 加载连接
         for link in links:
@@ -391,13 +484,34 @@ class ProcessRouteDesignDialog(QDialog):
             for idx, (node_id, node_item) in enumerate(self.nodes.items()):
                 insert_node_query = """
                 INSERT INTO pc_route_node (
-                    material_code, template_id, name, x_pos, y_pos, sort_order
-                ) VALUES (%s, %s, %s, %s, %s, %s)
+                    material_code, template_id, name, x_pos, y_pos, sort_order,pre_interval, pre_interval_unit,
+                    post_interval, post_interval_unit, relation, buffer_time, buffer_time_unit,allow_split,
+                    min_batch, max_batch, split_threshold, split_strategy, base_number,changeover_time_value, changeover_time_unit
+                ) VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s, %s,%s, %s)
                 """
+                # 获取控件值
+                pre_interval = self.pre_interval_edit.value()
+                pre_interval_unit = self.pre_interval_unit_combo.currentText()
+                post_interval = self.post_interval_edit.value()
+                post_interval_unit = self.post_interval_unit_combo.currentText()
+                relation = self.relation_combo.currentText()
+                buffer_time = self.buffer_time_edit.value()
+                buffer_time_unit = self.buffer_time_unit_combo.currentText()                
+                allow_split = int(self.allow_split_check.isChecked())
+                min_split_qty = self.min_split_qty_edit.value()
+                max_split_qty = self.max_split_qty_edit.value()
+                split_trigger_qty = self.split_trigger_qty_edit.value()
+                split_strategy = self.split_strategy_combo.currentText()
+                split_base_qty = self.split_base_qty_edit.value()
+                changeover_time_value = self.changeover_time_edit.value()
+                changeover_time_unit = self.changeover_time_unit_combo.currentText()
+
                 new_node_id = db.execute_insert(
                     insert_node_query,
                     (self.material_code, node_item.template_id, node_item.name,
-                     node_item.x(), node_item.y(), idx + 1)
+                     node_item.x(), node_item.y(), idx + 1,pre_interval, pre_interval_unit,
+                     post_interval, post_interval_unit, relation, buffer_time, buffer_time_unit,allow_split,
+                     min_split_qty, max_split_qty, split_trigger_qty, split_strategy, split_base_qty,changeover_time_value, changeover_time_unit)
                 )
                 node_ids.append((node_id, new_node_id))  # 记录旧ID到新ID的映射
 
@@ -426,3 +540,59 @@ class ProcessRouteDesignDialog(QDialog):
             QMessageBox.warning(self, "错误", f"保存失败: {str(e)}")
         finally:
             db.close()
+
+    def show_node_detail(self, node_item):
+        """显示节点详情，优先从pc_route_node读取，否则从pc_process_template读取"""
+        db = DBConnection()
+        # 先查pc_route_node
+        query = """
+        SELECT n.*, t.code, t.name
+        FROM pc_route_node n
+        LEFT JOIN pc_process_template t ON n.template_id = t.id
+        WHERE n.id = %s
+        """
+        result = db.execute_query(query, (node_item.node_id,))
+        if result:
+            node = result[0]
+            self.node_code_edit.setText(node['code'])
+            self.node_name_edit.setText(node['name'])
+            self.pre_interval_edit.setValue(node.get('pre_interval', 0))
+            self.pre_interval_unit_combo.setCurrentText(node.get('pre_interval_unit', '分'))
+            self.post_interval_edit.setValue(node.get('post_interval', 0))
+            self.post_interval_unit_combo.setCurrentText(node.get('post_interval_unit', '分'))
+            self.relation_combo.setCurrentText(node.get('relation', 'ES'))
+            self.buffer_time_edit.setValue(node.get('buffer_time', 0))
+            self.buffer_time_unit_combo.setCurrentText(node.get('buffer_time_unit', '分'))            
+            self.allow_split_check.setChecked(bool(node.get('allow_split', 0)))
+            self.min_split_qty_edit.setValue(node.get('min_batch', 0))
+            self.max_split_qty_edit.setValue(node.get('max_batch', 0))
+            self.split_trigger_qty_edit.setValue(node.get('split_threshold', 0))
+            self.split_strategy_combo.setCurrentText(node.get('split_strategy', '平均拆分'))
+            self.split_base_qty_edit.setValue(node.get('base_number', 0))            
+            self.changeover_edit.setValue(node.get('changeover_time_value', 0))
+            self.changeover_unit_combo.setCurrentText(node.get('changeover_time_unit', '分'))
+
+        else:
+            # 查模板表
+            query = "SELECT * FROM pc_process_template WHERE id = %s"
+            result = db.execute_query(query, (node_item.template_id,))
+            if result:
+                tpl = result[0]
+                self.node_code_edit.setText(tpl['code'])
+                self.node_name_edit.setText(tpl['name'])
+                self.pre_interval_edit.setValue(tpl.get('pre_interval_value', 0))
+                self.pre_interval_unit_combo.setCurrentText(tpl.get('pre_interval_unit', '分'))
+                self.post_interval_edit.setValue(tpl.get('post_interval_value', 0))
+                self.post_interval_unit_combo.setCurrentText(tpl.get('post_interval_unit', '分'))
+                self.relation_combo.setCurrentText(tpl.get('relation', 'ES'))
+                self.buffer_time_edit.setValue(tpl.get('buffer_time', 0))
+                self.buffer_time_unit_combo.setCurrentText(tpl.get('buffer_time_unit', '分'))                
+                self.allow_split_check.setChecked(bool(tpl.get('allow_split', 0)))
+                self.min_split_qty_edit.setValue(tpl.get('min_batch') or 0)
+                self.max_split_qty_edit.setValue(tpl.get('max_batch') or 0)
+                self.split_trigger_qty_edit.setValue(tpl.get('split_threshold') or 0)
+                self.split_strategy_combo.setCurrentText(tpl.get('split_strategy', '平均拆分'))
+                self.split_base_qty_edit.setValue(tpl.get('base_number') or 0)
+                self.changeover_edit.setValue(tpl.get('changeover_time_value', 0))
+                self.changeover_unit_combo.setCurrentText(tpl.get('changeover_time_unit', '分'))
+        db.close()
