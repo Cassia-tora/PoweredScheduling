@@ -149,7 +149,8 @@ class ProcessRouteManagement(QWidget):
                 text = QGraphicsTextItem(f"{node['name']}\n({node['code'] or ''})")
                 text.setPos(10, 10)
                 text.setFont(QFont("SimHei", 10))
-                rect.addChildItem(text)
+                
+                text.setParentItem(rect)  # 将文本设置为矩形的子项                
                 
                 # 存储节点ID与图形项
                 node_items[node['id']] = rect

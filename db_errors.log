@@ -879,3 +879,45 @@
         LEFT JOIN pc_process_template t ON n.template_id = t.id
         WHERE n.material_code = %s
         ] [参数: ('cp-001',)]: (1054, "Unknown column 'n.allow_split' in 'field list'")
+2025-08-29 14:07:57 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_node_resource (
+    id INT PRIMARY KEY AUTO_INCREMENT  COMMENT '主键'
+    node_id VARCHAR(64) NOT NULL COMMENT '工艺路线节点ID'
+    resource_code VARCHAR(64) NOT NULL COMMENT '资源编码'
+    resource_name VARCHAR(128) COMMENT '资源名称'
+    resource_group VARCHAR(128) COMMENT '资源组'
+    capacity DOUBLE COMMENT '容量'
+    productivity DOUBLE  COMMENT '产能'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点主资源表';
+    ] [参数: None]: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'node_id VARCHAR(64) NOT NULL COMMENT '工艺路线节点ID'\n    resource_code VA' at line 3")
+2025-08-29 14:07:57 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_node_material (
+    id INT PRIMARY KEY AUTO_INCREMENT  COMMENT '主键'
+    node_id VARCHAR(64) NOT NULL  COMMENT '工艺路线节点ID'
+    material_code VARCHAR(64) NOT NULL  COMMENT '物料编码'
+    material_name VARCHAR(128)  COMMENT '物料名称'
+    quantity DOUBLE  COMMENT '数量'
+    is_used TINYINT DEFAULT 1   COMMENT '是否使用（1=是，0=否）'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点使用物料表';
+    ] [参数: None]: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'node_id VARCHAR(64) NOT NULL  COMMENT '工艺路线节点ID'\n    material_code V' at line 3")
+2025-08-29 14:09:20 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_node_material (
+    id INT PRIMARY KEY AUTO_INCREMENT  COMMENT '主键',
+    node_id VARCHAR(64) NOT NULL  COMMENT '工艺路线节点ID',
+    material_code VARCHAR(64) NOT NULL  COMMENT '物料编码',
+    material_name VARCHAR(128)  COMMENT '物料名称',
+    quantity DOUBLE  COMMENT '数量',
+    is_used TINYINT DEFAULT 1   COMMENT '是否使用（1=是，0=否）',
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点使用物料表';
+    ] [参数: None]: (1064, "You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点使用物料è' at line 8")
+2025-08-29 14:09:43 - ERROR - 更新错误 [SQL: CREATE TABLE pc_route_node_resource (
+    id INT PRIMARY KEY AUTO_INCREMENT  COMMENT '主键',
+    node_id VARCHAR(64) NOT NULL COMMENT '工艺路线节点ID',
+    resource_code VARCHAR(64) NOT NULL COMMENT '资源编码',
+    resource_name VARCHAR(128) COMMENT '资源名称',
+    resource_group VARCHAR(128) COMMENT '资源组',
+    capacity DOUBLE COMMENT '容量',
+    productivity DOUBLE  COMMENT '产能'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点主资源表';
+    ] [参数: None]: (1050, "Table 'pc_route_node_resource' already exists")
+2025-08-29 16:39:11 - ERROR - 插入错误 [SQL: INSERT INTO pc_route_node_resource (node_id, resource_code, resource_name, resource_group, capacity, productivity) VALUES (%s, %s, %s, %s, %s, %s)] [参数: (1, 'A-1', 'A1生产线', '加工厂', '10.00', '50.00')]: (1364, "Field 'material_code' doesn't have a default value")
+2025-08-29 16:39:12 - ERROR - 插入错误 [SQL: INSERT INTO pc_route_node_resource (node_id, resource_code, resource_name, resource_group, capacity, productivity) VALUES (%s, %s, %s, %s, %s, %s)] [参数: (1, 'A-2', 'A2生产线', '加工厂', '15.00', '70.00')]: (1364, "Field 'material_code' doesn't have a default value")
+2025-08-29 16:39:12 - ERROR - 插入错误 [SQL: INSERT INTO pc_route_node_resource (node_id, resource_code, resource_name, resource_group, capacity, productivity) VALUES (%s, %s, %s, %s, %s, %s)] [参数: (1, 'B-1', 'B1生产线', '加工厂', '20.00', '100.00')]: (1364, "Field 'material_code' doesn't have a default value")
+2025-08-29 16:39:12 - ERROR - 插入错误 [SQL: INSERT INTO pc_route_node_resource (node_id, resource_code, resource_name, resource_group, capacity, productivity) VALUES (%s, %s, %s, %s, %s, %s)] [参数: (1, 'B-2', 'B2生产线', '加工厂', '17.00', '130.00')]: (1364, "Field 'material_code' doesn't have a default value")

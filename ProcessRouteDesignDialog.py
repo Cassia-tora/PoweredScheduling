@@ -217,15 +217,18 @@ class ProcessRouteDesignDialog(QDialog):
         # 右侧：画布和节点详情
         right_widget = QWidget()
         right_layout = QVBoxLayout(right_widget)
+
+        # 节点详情区域分隔线
+        detail_splitter = QSplitter(Qt.Vertical)
+        
         
         # 画布区域（使用支持接收拖拽的视图）
         self.scene = QGraphicsScene(self)
         self.view = CanvasView(self.scene, self, self)  # 传入对话框引用
-        right_layout.addWidget(self.view)
+        detail_splitter.addWidget(self.view)
+        detail_splitter.setSizes([300, 300])  
         
-        # 节点详情区域
-        detail_splitter = QSplitter(Qt.Vertical)
-        detail_splitter.setSizes([200, 400])  # 画布区域200，详情区域400
+        
         
         # 节点详情 - 包裹在滚动区域中
         self.node_detail_scroll = QScrollArea()
@@ -237,6 +240,11 @@ class ProcessRouteDesignDialog(QDialog):
         self.basic_info_group = QGroupBox("基本信息")
         self.basic_info_layout = QFormLayout()
         self.basic_info_group.setLayout(self.basic_info_layout)
+
+        # 右侧标签页垂直分隔线
+        Tab_splitter = QSplitter(Qt.Horizontal)
+        Tab_splitter.addWidget(self.basic_info_group)
+        Tab_splitter.setSizes([150, 650])
 
         # 基本信息控件
         self.node_code_edit = QLineEdit()
@@ -293,6 +301,41 @@ class ProcessRouteDesignDialog(QDialog):
         self.tab_widget.addTab(self.split_tab, "自动拆分")
         self.tab_widget.addTab(self.changeover_tab, "换型配置")
         
+        # 主资源标签页
+        resource_layout = QVBoxLayout()
+
+        resource_btn_layout = QHBoxLayout()
+        self.add_resource_btn = QPushButton("添加资源")
+        self.add_resource_btn.clicked.connect(self.add_resource)
+        resource_btn_layout.addWidget(self.add_resource_btn)
+        resource_layout.addLayout(resource_btn_layout)
+
+        self.resource_table = QTableWidget()
+        self.resource_table.setColumnCount(7)
+        self.resource_table.setHorizontalHeaderLabels(["序号", "编码", "名称", "资源组", "容量", "产能", "操作"])
+        self.resource_table.horizontalHeader().setStretchLastSection(True)
+        resource_layout.addWidget(self.resource_table)      
+        
+        
+        self.resource_tab.setLayout(resource_layout)
+
+        # 使用物料标签页
+        material_layout = QVBoxLayout()
+
+        material_btn_layout = QHBoxLayout()
+        self.add_material_btn = QPushButton("添加物料")
+        self.add_material_btn.clicked.connect(self.add_material_row)
+        material_btn_layout.addWidget(self.add_material_btn)
+        material_layout.addLayout(material_btn_layout)
+
+        self.material_table = QTableWidget()
+        self.material_table.setColumnCount(6)
+        self.material_table.setHorizontalHeaderLabels(["序号", "编码", "名称", "数量", "是否使用", "操作"])
+        self.material_table.horizontalHeader().setStretchLastSection(True)
+        material_layout.addWidget(self.material_table)
+        
+        self.material_tab.setLayout(material_layout)
+        
         # 自动拆分标签页控件
         split_layout = QFormLayout()
         self.allow_split_check = QCheckBox("允许自动拆分")
@@ -325,10 +368,14 @@ class ProcessRouteDesignDialog(QDialog):
         changeover_layout.addRow("时长单位", self.changeover_time_unit_combo)
         self.changeover_tab.setLayout(changeover_layout)
 
-        self.node_detail_layout.addWidget(self.basic_info_group)
-        self.node_detail_layout.addWidget(self.tab_widget)
+        # 右侧标签页和基本信息水平分隔线
+        Tab_splitter.addWidget(self.tab_widget)
+
+        self.node_detail_layout.addWidget(Tab_splitter)
+        
         # 将详情部件放入滚动区域
         self.node_detail_scroll.setWidget(self.node_detail_widget)
+
         detail_splitter.addWidget(self.node_detail_scroll)  # 使用滚动区域替代原部件
         
         right_layout.addWidget(detail_splitter)
@@ -345,6 +392,29 @@ class ProcessRouteDesignDialog(QDialog):
         btn_layout.addWidget(self.save_btn)
         btn_layout.addWidget(self.cancel_btn)
         main_layout.addLayout(btn_layout)
+
+    def add_resource(self):
+        """添加主资源"""
+        # 创建资源选择对话框（简化实现，实际应使用更完善的选择组件）
+        from ResourceSelectionDialog import ResourceSelectionDialog  # 假设存在此对话框
+        dialog = ResourceSelectionDialog(self, self.all_resources)
+        if dialog.exec_():
+            selected_resources = dialog.get_selected_resources()
+            for resource in selected_resources:
+                self.add_resource_to_table(resource)
+
+    def add_resource_to_table(self, resource):
+        """将选中的资源添加到资源表格"""
+            
+
+    def add_material_row(self):
+        row = self.material_table.rowCount()
+        self.material_table.insertRow(row)
+        self.material_table.setItem(row, 0, QTableWidgetItem(""))
+        self.material_table.setItem(row, 1, QTableWidgetItem(""))
+        btn = QPushButton("删除")
+        btn.clicked.connect(lambda: self.material_table.removeRow(row))
+        self.material_table.setCellWidget(row, 2, btn)
 
     def load_route_data(self):
         """加载工艺路线数据"""
@@ -478,6 +548,7 @@ class ProcessRouteDesignDialog(QDialog):
             # 先删除现有节点和连接
             db.execute_update("DELETE FROM pc_route_node WHERE material_code = %s", (self.material_code,))
             db.execute_update("DELETE FROM pc_route_link WHERE material_code = %s", (self.material_code,))
+            db.execute_update("DELETE FROM pc_route_node_resource WHERE material_code = %s", (self.material_code,))
 
             # 保存节点
             node_ids = []
@@ -514,6 +585,18 @@ class ProcessRouteDesignDialog(QDialog):
                      min_split_qty, max_split_qty, split_trigger_qty, split_strategy, split_base_qty,changeover_time_value, changeover_time_unit)
                 )
                 node_ids.append((node_id, new_node_id))  # 记录旧ID到新ID的映射
+
+                for row in range(self.resource_table.rowCount()):
+                    resource_code = self.resource_table.item(row, 1).text().strip() if self.resource_table.item(row, 1) else ""
+                    resource_name = self.resource_table.item(row, 2).text().strip() if self.resource_table.item(row, 2) else ""
+                    resource_group = self.resource_table.item(row, 3).text().strip() if self.resource_table.item(row, 3) else ""
+                    capacity = self.resource_table.item(row, 4).text().strip() if self.resource_table.item(row, 4) else ""
+                    productivity = self.resource_table.item(row, 5).text().strip() if self.resource_table.item(row, 5) else ""
+                    if resource_code:  # 编码不能为空
+                        db.execute_insert(
+                            "INSERT INTO pc_route_node_resource (node_id,material_code, resource_code, resource_name, resource_group, capacity, productivity) VALUES (%s, %s, %s,%s, %s, %s, %s)",
+                            (node_id,self.material_code, resource_code, resource_name, resource_group, capacity, productivity)
+                        )
 
             # 保存连接
             node_id_map = dict(node_ids)
@@ -595,4 +678,134 @@ class ProcessRouteDesignDialog(QDialog):
                 self.split_base_qty_edit.setValue(tpl.get('base_number') or 0)
                 self.changeover_edit.setValue(tpl.get('changeover_time_value', 0))
                 self.changeover_unit_combo.setCurrentText(tpl.get('changeover_time_unit', '分'))
+        
+        #加裁主资源
+        resource_query = """
+        SELECT resource_code, resource_name, resource_group, capacity, productivity
+        FROM pc_route_node_resource WHERE node_id = %s
+        """
+        resources = db.execute_query(resource_query, (node_item.node_id,))
+        if resources:
+            self.resource_table.setRowCount(0)
+            for idx, r in enumerate(resources):
+                self.resource_table.insertRow(idx)
+                self.resource_table.setItem(idx, 0, QTableWidgetItem(str(idx + 1)))  # 序号
+                self.resource_table.setItem(idx, 1, QTableWidgetItem(r.get('resource_code', '')))
+                self.resource_table.setItem(idx, 2, QTableWidgetItem(r.get('resource_name', '')))
+                self.resource_table.setItem(idx, 3, QTableWidgetItem(r.get('resource_group', '')))
+                self.resource_table.setItem(idx, 4, QTableWidgetItem(str(r.get('capacity', ''))))
+                self.resource_table.setItem(idx, 5, QTableWidgetItem(str(r.get('productivity', ''))))
+                # 操作按钮
+                op_widget = QWidget()
+                op_layout = QHBoxLayout(op_widget)
+                op_layout.setContentsMargins(2, 2, 2, 2)
+                #编辑
+                edit_btn = QPushButton("编辑")
+                edit_btn.setMinimumSize(50, 25)
+                edit_btn.clicked.connect(lambda _, row=idx: self.edit_resource(row, r.get('resource_code', '')))
+                op_layout.addWidget(edit_btn)
+                #删除
+                btn = QPushButton("删除")
+                btn.setMinimumSize(50, 25)
+                btn.clicked.connect(lambda _, row=idx: self.resource_table.removeRow(row))
+                op_layout.addWidget(btn)
+                self.resource_table.setCellWidget(idx, 6, op_widget)
+        else:
+            # 查模板表
+            resource_query = """
+            SELECT r.`code`AS resource_code,r.`name` AS resource_name,r.resource_group,r.capacity, 
+            r.productivity_value As productivity 
+            FROM pc_template_resources tr JOIN pc_resource r ON tr.resource_code = r.code WHERE tr.template_id = %s
+            """
+            resources = db.execute_query(resource_query, (node_item.template_id,))
+            if resources:
+                self.resource_table.setRowCount(0)
+                for idx, r in enumerate(resources):
+                    self.resource_table.insertRow(idx)
+                    self.resource_table.setItem(idx, 0, QTableWidgetItem(str(idx + 1)))  # 序号
+                    self.resource_table.setItem(idx, 1, QTableWidgetItem(r.get('resource_code', '')))
+                    self.resource_table.setItem(idx, 2, QTableWidgetItem(r.get('resource_name', '')))
+                    self.resource_table.setItem(idx, 3, QTableWidgetItem(r.get('resource_group', '')))
+                    self.resource_table.setItem(idx, 4, QTableWidgetItem(str(r.get('capacity', ''))))
+                    self.resource_table.setItem(idx, 5, QTableWidgetItem(str(r.get('productivity', ''))))
+                    # 操作按钮
+                    op_widget = QWidget()
+                    op_layout = QHBoxLayout(op_widget)
+                    op_layout.setContentsMargins(2, 2, 2, 2)
+                    #编辑
+                    edit_btn = QPushButton("编辑")
+                    edit_btn.setMinimumSize(50, 25)
+                    edit_btn.clicked.connect(lambda _, row=idx: self.edit_resource(row, r.get('resource_code', '')))
+                    op_layout.addWidget(edit_btn)
+                    #删除
+                    btn = QPushButton("删除")
+                    btn.setMinimumSize(50, 25)
+                    btn.clicked.connect(lambda _, row=idx: self.resource_table.removeRow(row))
+                    op_layout.addWidget(btn)
+                    self.resource_table.setCellWidget(idx, 6, op_widget)
+        # 使用物料读取
+        material_query = """
+        SELECT material_code, material_name, quantity, is_used
+        FROM pc_route_node_material WHERE node_id = %s
+        """
+        materials = db.execute_query(material_query, (node_item.node_id,))
+        if materials:
+            self.material_table.setRowCount(0)
+            for idx, m in enumerate(materials):
+                self.material_table.insertRow(idx)
+                self.material_table.setItem(idx, 0, QTableWidgetItem(str(idx + 1)))  # 序号
+                self.material_table.setItem(idx, 1, QTableWidgetItem(m.get('material_code', '')))
+                self.material_table.setItem(idx, 2, QTableWidgetItem(m.get('material_name', '')))
+                self.material_table.setItem(idx, 3, QTableWidgetItem(str(m.get('quantity', ''))))
+                use_checkbox = QCheckBox()
+                use_checkbox.setChecked(bool(m.get('is_used', 0)))
+                self.material_table.setCellWidget(idx, 4, use_checkbox)
+                btn = QPushButton("删除")
+                btn.clicked.connect(lambda _, row=idx: self.material_table.removeRow(row))
+                self.material_table.setCellWidget(idx, 5, btn)
+        else:
+            # 查模板表
+            material_query = """
+            SELECT m.code AS material_code, m.name AS material_name, tm.quantity
+            FROM pc_template_materials tm 
+            JOIN pc_material m ON tm.material_code = m.code 
+            WHERE tm.template_id = %s
+            """
+            materials = db.execute_query(material_query, (node_item.template_id,))
+            if materials:
+                self.material_table.setRowCount(0)
+                for idx, m in enumerate(materials):
+                    self.material_table.insertRow(idx)
+                    self.material_table.setItem(idx, 0, QTableWidgetItem(str(idx + 1)))  # 序号
+                    self.material_table.setItem(idx, 1, QTableWidgetItem(m.get('material    _code', '')))
+                    self.material_table.setItem(idx, 2, QTableWidgetItem(m.get('material_name', '')))
+                    self.material_table.setItem(idx, 3, QTableWidgetItem(str(m.get('quantity', ''))))
+                    use_checkbox = QCheckBox()
+                    use_checkbox.setChecked(bool(m.get('is_used', 0)))
+                    self.material_table.setCellWidget(idx, 4, use_checkbox)
+                    btn = QPushButton("删除")
+                    btn.clicked.connect(lambda _, row=idx: self.material_table.removeRow(row))
+                    self.material_table.setCellWidget(idx, 5, btn)
+
         db.close()
+
+    def edit_resource(self, row, resource_code):
+        """编辑资源"""
+        from ResourceDialog import ResourceDialog
+        dialog = ResourceDialog(self, resource_code)
+        if dialog.exec_():
+            # 重新加载资源数据
+            self.load_resources()
+            # 更新表格中对应行
+            for res in self.all_resources:
+                if res['code'] == resource_code:
+                    self.resource_table.item(row, 2).setText(res['name'])
+                    self.resource_table.item(row, 3).setText(res['resource_group'])
+                    self.resource_table.item(row, 4).setText(f"{res['capacity']} {res['capacity_unit']}")
+                    
+                    if res['productivity_type'] == 'per_unit_time':
+                        productivity_text = f"{res['productivity_value']}个/{res['productivity_time_unit']}"
+                    else:
+                        productivity_text = f"{res['productivity_value']}{res['productivity_time_unit']}/每个"
+                    self.resource_table.item(row, 5).setText(productivity_text)
+                    break

@@ -235,7 +235,7 @@ def init_database():
     # 工艺路线表
     create_process_route_table= """CREATE TABLE IF NOT EXISTS pc_process_route (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    material_code VARCHAR(50) NOT NULL,
+    material_code VARCHAR (50) NOT NULL COMMENT ' 物料编码 ',
     name VARCHAR(100) NOT NULL,
     description TEXT,
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -246,7 +246,7 @@ def init_database():
     #-- 工艺路线节点表
     create_route_node_table= """CREATE TABLE IF NOT EXISTS pc_route_node (
     id BIGINT  NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    material_code VARCHAR(50) NOT NULL,
+    material_code VARCHAR (50) NOT NULL COMMENT ' 物料编码 ',
     template_id BIGINT,
     name VARCHAR(100) NOT NULL,
     x_pos INT DEFAULT 0,
@@ -275,13 +275,38 @@ def init_database():
     #-- 工艺路线节点连接表
     create_route_link_table= """CREATE TABLE IF NOT EXISTS pc_route_link (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    material_code VARCHAR(50) NOT NULL,
+    material_code VARCHAR (50) NOT NULL COMMENT ' 物料编码 ',
     from_node_id BIGINT NOT NULL,
     to_node_id BIGINT NOT NULL,
     FOREIGN KEY (material_code) REFERENCES pc_material(code),
     FOREIGN KEY (from_node_id) REFERENCES pc_route_node(id),
     FOREIGN KEY (to_node_id) REFERENCES pc_route_node(id)
     )"""
+
+    #-- 工艺路线节点主资源表
+    create_route_node_resource_table="""CREATE TABLE IF NOT EXISTS pc_route_node_resource (
+    id INT PRIMARY KEY AUTO_INCREMENT  COMMENT '主键',
+    material_code VARCHAR (50) NOT NULL COMMENT ' 物料编码 ',
+    node_id VARCHAR(64) NOT NULL COMMENT '工艺路线节点ID',
+    resource_code VARCHAR(64) NOT NULL COMMENT '资源编码',
+    resource_name VARCHAR(128) COMMENT '资源名称',
+    resource_group VARCHAR(128) COMMENT '资源组',
+    capacity DOUBLE COMMENT '容量',
+    productivity DOUBLE  COMMENT '产能'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点主资源表';
+    """
+    
+    #-- 工艺路线节点使用物料表
+    create_route_node_material_table="""CREATE TABLE IF NOT EXISTS pc_route_node_material (
+    id INT PRIMARY KEY AUTO_INCREMENT  COMMENT '主键',
+    node_id VARCHAR(64) NOT NULL  COMMENT '工艺路线节点ID',
+    material_code VARCHAR(64) NOT NULL  COMMENT '物料编码',
+    material_name VARCHAR(128)  COMMENT '物料名称',
+    quantity DOUBLE  COMMENT '数量',
+    is_used TINYINT DEFAULT 1   COMMENT '是否使用（1=是，0=否）'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='工艺路线节点使用物料表';
+    """
+
     # 执行创建表语句
     success = True
     try:
@@ -301,6 +326,8 @@ def init_database():
         db.execute_update(create_process_route_table) #  工艺路线表
         db.execute_update(create_route_node_table) #  工艺路线节点表
         db.execute_update(create_route_link_table) #  工艺路线节点连接表
+        db.execute_update(create_route_node_resource_table) #  工艺路线节点主资源表
+        db.execute_update(create_route_node_material_table) #  工艺路线节点使用物料表
     except Exception as e:
         print(f"初始化数据库错误: {e}")
         success = False
